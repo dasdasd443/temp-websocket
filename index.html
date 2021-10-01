@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form action="" id="form">
+        <label for="user">User</label>
+        <span id="user"></span>
+        <label for="message">Message</label><br/>
+        <input type="text" id="message"><br/>
+        <label for="to">To</label>
+        <select name="to" id="to"></select>
+        <input type="submit" id="submit"/> <br/>
+    </form>
+    <script>
+        const ws = new WebSocket("ws://localhost:5500");
+        ws.addEventListener("open", (ws) => {
+            console.log("We are connected");
+        });
+        ws.addEventListener("message",async ({data}) => {
+            const response = await data;
+            const parsedData = JSON.parse(response);
+            if(parsedData.type === "id"){
+                document.querySelector("#user").innerHTML = parsedData.id;
+            }else if(parsedData.type === "clientID"){
+                parsedData.data.forEach(client => {
+                    let option = document.createElement("option");
+                    option.innerText = client;
+                    option.value = client;
+                    document.querySelector("#to").appendChild(option);
+                });
+            }else if(parsedData.type === "message"){
+                console.log(parsedData.message);
+            }
+
+        });
+        document.querySelector("form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const message = {
+                message: document.querySelector("#message").value,
+                to: document.querySelector('#to').value,
+            }
+            ws.send(JSON.stringify(message));
+        })
+    </script>
+</body>
+</html>
